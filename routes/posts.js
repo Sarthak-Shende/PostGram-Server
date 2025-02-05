@@ -56,6 +56,17 @@ router
 		}
 	});
 
+router.delete("/:id", async (req, res) => {
+	try {
+		const postId = req.params.id;
+		await Post.findByIdAndDelete(postId); // Delete the post by ID
+		res.status(200).json({ message: "Post deleted successfully" });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
 router.get("/getImage/:id", async (req, res) => {
 	const { id } = req.params;
 	let file = "";
@@ -79,6 +90,44 @@ router.get("/getImage/:id", async (req, res) => {
 			console.error("Download error:", error);
 			res.status(500).json({ error: "Failed to download file" });
 		});
+});
+
+// PUT /api/posts/:id - Update a post
+router.put("/:id", upload.single("image"), async (req, res) => {
+	try {
+		const { title, description } = req.body;
+
+		const postId = req.params.id;
+
+		const updateData = { title, description };
+		if (req.file) {
+			await b2.authorize();
+
+			const response = await b2.getUploadUrl({
+				bucketId: process.env.B2_BUCKET_ID,
+			});
+
+			const uploadResponse = await b2.uploadFile({
+				uploadUrl: response.data.uploadUrl,
+				uploadAuthToken: response.data.authorizationToken,
+				fileName: req.file.originalname,
+				data: req.file.buffer,
+			});
+
+			const image = uploadResponse.data.fileId;
+			updateData.image = image;
+		}
+
+		// If a new image is uploaded, update the image URL
+
+		const updatedPost = await Post.findByIdAndUpdate(postId, updateData, {
+			new: true,
+		});
+		res.status(200).json(updatedPost);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Server error" });
+	}
 });
 
 export default router;
