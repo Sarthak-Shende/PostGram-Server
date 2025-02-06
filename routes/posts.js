@@ -19,7 +19,6 @@ router
 	.route("/")
 	.post(upload.single("image"), async (req, res) => {
 		try {
-			// Log uploaded file
 
 			await b2.authorize();
 
@@ -77,8 +76,8 @@ router.get("/getImage/:id", async (req, res) => {
 			file = response.data.fileName;
 			return await b2.downloadFileByName({
 				bucketName: process.env.B2_BUCKET_NAME,
-				fileName: response.data.fileName, // Fix typo: `response` instead of `responsse`
-				responseType: "arraybuffer", // Fix incorrect `ArrayBuffer` syntax
+				fileName: response.data.fileName, 
+				responseType: "arraybuffer", 
 			});
 		})
 		.then(({ data }) => {
@@ -92,7 +91,6 @@ router.get("/getImage/:id", async (req, res) => {
 		});
 });
 
-// PUT /api/posts/:id - Update a post
 router.put("/:id", upload.single("image"), async (req, res) => {
 	try {
 		const { title, description } = req.body;
@@ -117,8 +115,6 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 			const image = uploadResponse.data.fileId;
 			updateData.image = image;
 		}
-
-		// If a new image is uploaded, update the image URL
 
 		const updatedPost = await Post.findByIdAndUpdate(postId, updateData, {
 			new: true,
